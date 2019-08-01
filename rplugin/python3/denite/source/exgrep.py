@@ -6,11 +6,14 @@ import os
 
 
 def run_command(command, cwd, encode='utf8'):
-    process = subprocess.run(command,
-                             cwd=cwd,
-                             stdout=subprocess.PIPE)
+    try:
+        process = subprocess.run(command,
+                                 cwd=cwd,
+                                 stdout=subprocess.PIPE)
 
-    return process.stdout.decode(encode).split('\n')
+        return process.stdout.decode(encode).split('\n')
+    except Exception as e:
+        return []
 
 def cmd_exists(cmd):
     return subprocess.call("type " + cmd, shell=True,
@@ -24,6 +27,8 @@ class Source(Base):
         self.vim = vim
         self.name = 'exgrep'
         self.kind = 'file'
+        self.cnt = 0
+        self.done = True
 
     def on_init(self, context):
         context['is_interactive'] = True
@@ -59,16 +64,23 @@ class Source(Base):
 
 
     def gather_candidates(self, context):
+        if not self.done:
+            return []
+
+        # self.cnt += 1
+        # self.vim.command('echo "cnt:' + str(self.cnt) + '"')
         inputs = context["input"].strip()
         kws = re.split('\s', inputs)
 
         if inputs == "" or len(kws) < 1:
             return [{'word': 'Please input keyword'}]
 
-        args = self.get_args(kws[0])
+        self.done = False
 
-        cwd = os.getcwd()
-        output = run_command(args, cwd)
+        args = self.get_args(kws[0])
+        output = run_command(args, os.getcwd())
+
+        self.done = True
 
         rows = []
         for line in output:
