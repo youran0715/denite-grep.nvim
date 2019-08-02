@@ -75,6 +75,10 @@ class Source(Base):
         if inputs == "" or len(kws) < 1:
             return [{'word': 'Please input keyword'}]
 
+        # self.vim.command('echo "len:' + str(len(kws[0])) + '"')
+        if len(kws[0]) <= 2:
+            return [{'word': inputs, 'abbr': 'Please input at least 3 chars'}]
+
         self.done = False
 
         args = self.get_args(kws[0])
@@ -98,7 +102,7 @@ class Source(Base):
             row = regex.search(line)[0].strip(':')
 
             return {
-                'word': line,
+                'word': body,
                 "abbr": '{0}:{1}: {2}'.format(
                     path,
                     row,
